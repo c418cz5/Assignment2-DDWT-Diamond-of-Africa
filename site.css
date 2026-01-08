@@ -1,0 +1,66 @@
+﻿/* Custom styles for Show Database (Index + Details Page) */
+
+/* Card hover effect (Index Page) */
+.card {
+	transition: transform 0.3s ease, box-shadow 0.3s ease;
+	border: none;
+}
+
+	.card:hover {
+		transform: translateY(-5px);
+		box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+	}
+
+/* Card title style */
+.card-title {
+	color: #2c3e50;
+	font-weight: 600;
+}
+
+/* Search form style */
+.input-group .form-control {
+	border-right: none;
+	border-radius: 0.25rem 0 0 0.25rem;
+}
+
+.input-group .btn-primary {
+	border-left: none;
+	border-radius: 0 0.25rem 0.25rem 0;
+	background-color: #2c3e50;
+	border-color: #2c3e50;
+}
+
+	.input-group .btn-primary:hover {
+		background-color: #1a252f;
+		border-color: #1a252f;
+	}
+
+/* Details page card style */
+.card.shadow-sm {
+	border-radius: 0.5rem;
+	overflow: hidden;
+}
+
+/* Badge style (Rating) */
+.badge.bg-primary {
+	font-size: 1rem;
+	padding: 0.5rem 1rem;
+	border-radius: 2rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+	.col-md-4 {
+		flex: 0 0 100%;
+		max-width: 100%;
+	}
+
+	.card-footer .btn {
+		width: 100%;
+		margin-bottom: 0.5rem;
+	}
+
+		.card-footer .btn.ms-2 {
+			margin-left: 0 !important;
+		}
+}

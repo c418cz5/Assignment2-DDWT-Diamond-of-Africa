@@ -39,7 +39,7 @@
 							<p class="card-text"><strong>Director:</strong> @show.directorName</p>
 						</div>
 						<div class="card-footer">
-							<a href="@Url.Action("Details", "Home", new { id = show.videoId })"
+							<a href="@Url.Action("Details", "Home", new { videoId = show.videoId })" 
 							   class="btn btn-info btn-sm">More Details</a>
 							<a href="@Url.Action("Update", "Home", new { id = show.videoId })"
 							   class="btn btn-warning btn-sm ms-2">Update Details</a>
