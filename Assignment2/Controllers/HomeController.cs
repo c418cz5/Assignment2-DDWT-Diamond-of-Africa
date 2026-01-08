@@ -21,30 +21,62 @@ namespace Assignment2.Controllers
 		}
 
 		// Index Page: Display show list + search by title
-		public ActionResult Index(string searchTitle = "")
+		public ActionResult Index(string searchTitle = "", string searchGenre = "")
 		{
 			string connStr = System.Configuration.ConfigurationManager.ConnectionStrings["ShowDB"].ConnectionString;
 			List<VideoModel> showList = new List<VideoModel>();
+			List<GenreModel> genreList = new List<GenreModel>();
+			using (SqlConnection connGenre = new SqlConnection(connStr))
+			{
+				string genreQuery = "SELECT genreId, genre FROM Genres ORDER BY genre";
+				using (SqlCommand cmdGenre = new SqlCommand(genreQuery, connGenre))
+				{
+					connGenre.Open();
+					using (SqlDataReader reader = cmdGenre.ExecuteReader())
+					{
+						while (reader.Read())
+						{
+							genreList.Add(new GenreModel
+							{
+								genreId = reader["genreId"].ToString(),
+								genre = reader["genre"].ToString()
+							});
+						}
+					}
+				}
+			}
+			ViewBag.Genres = genreList; 
+			ViewBag.SearchGenre = searchGenre; 
+
 
 			using (SqlConnection connection = new SqlConnection(connStr))
 			{
 				string query = @"SELECT v.videoId, v.videoTitle AS title,
-                                      v.releaseYear,
-                                      STRING_AGG(g.genre, ', ') AS genres,
-                                      STRING_AGG(d.directorName, ', ') AS directorName
-                               FROM videos v
-                               LEFT JOIN videoGenres vg ON v.videoId = vg.videoId
-                               LEFT JOIN Genres g ON vg.genreId = g.genreId
-                               LEFT JOIN VideoDirectors vd ON v.videoId = vd.videoId
-                               LEFT JOIN directors d ON vd.directorId = d.directorId";
+                          v.releaseYear,
+                          STRING_AGG(g.genre, ', ') AS genres,
+                          STRING_AGG(d.directorName, ', ') AS directorName
+                   FROM videos v
+                   LEFT JOIN videoGenres vg ON v.videoId = vg.videoId
+                   LEFT JOIN Genres g ON vg.genreId = g.genreId
+                   LEFT JOIN VideoDirectors vd ON v.videoId = vd.videoId
+                   LEFT JOIN directors d ON vd.directorId = d.directorId";
 
+				List<string> whereConditions = new List<string>();
 				if (!string.IsNullOrEmpty(searchTitle))
 				{
-					query += " WHERE v.videoTitle LIKE @SearchTerm";
+					whereConditions.Add("v.videoTitle LIKE @SearchTerm");
+				}
+				if (!string.IsNullOrEmpty(searchGenre))
+				{
+					whereConditions.Add("vg.genreId = @GenreId"); 
+				}
+				if (whereConditions.Count > 0)
+				{
+					query += " WHERE " + string.Join(" AND ", whereConditions);
 				}
 
 				query += @" GROUP BY v.videoId, v.videoTitle, v.releaseYear
-                           ORDER BY v.videoTitle";
+               ORDER BY v.videoTitle";
 
 				using (SqlCommand command = new SqlCommand(query, connection))
 				{
@@ -52,6 +84,10 @@ namespace Assignment2.Controllers
 					if (!string.IsNullOrEmpty(searchTitle))
 					{
 						command.Parameters.AddWithValue("@SearchTerm", "%" + searchTitle + "%");
+					}
+					if (!string.IsNullOrEmpty(searchGenre))
+					{
+						command.Parameters.AddWithValue("@GenreId", searchGenre);
 					}
 
 					connection.Open();
@@ -77,8 +113,13 @@ namespace Assignment2.Controllers
 
 			ViewBag.Shows = showList;
 			ViewBag.SearchKey = searchTitle;
-
 			return View();
+		}
+
+		public class GenreModel
+		{
+			public string genreId { get; set; }
+			public string genre { get; set; }
 		}
 
 		// Details Page: Get single show details by videoId

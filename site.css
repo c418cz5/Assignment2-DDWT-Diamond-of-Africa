@@ -64,3 +64,36 @@
 			margin-left: 0 !important;
 		}
 }
+
+.card {
+	transition: transform 0.3s ease, box-shadow 0.3s ease;
+	border: none;
+	margin-bottom: 1.5rem;
+}
+
+	.card:hover {
+		transform: translateY(-5px);
+		box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1); 
+	}
+
+.card-title {
+	color: #2c3e50;
+	font-weight: 600;
+	margin-bottom: 1rem;
+}
+
+.card.shadow-sm {
+	border-radius: 0.5rem;
+	overflow: hidden;
+	margin-top: 1rem;
+}
+
+.badge.bg-primary {
+	font-size: 1rem;
+	padding: 0.5rem 1rem;
+	border-radius: 2rem; 
+}
+
+.row.g-3 {
+	align-items: center;
+}
