@@ -7,7 +7,6 @@ namespace Assignment2.Controllers
 {
 	public class HomeController : Controller
 	{
-		// Extend VideoModel: Add fields required for Details page (cast, release country, rating)
 		public class VideoModel
 		{
 			public string videoId { get; set; }
@@ -16,16 +15,20 @@ namespace Assignment2.Controllers
 			public string genres { get; set; }
 			public string directorName { get; set; }
 			public string castNames { get; set; }
-			public string releaseCountry { get; set; }
-			public string rating { get; set; }
 		}
 
-		// Index Page: Display show list + search by title
+		public class GenreModel
+		{
+			public string genreId { get; set; }
+			public string genre { get; set; }
+		}
+
 		public ActionResult Index(string searchTitle = "", string searchGenre = "")
 		{
 			string connStr = System.Configuration.ConfigurationManager.ConnectionStrings["ShowDB"].ConnectionString;
 			List<VideoModel> showList = new List<VideoModel>();
 			List<GenreModel> genreList = new List<GenreModel>();
+
 			using (SqlConnection connGenre = new SqlConnection(connStr))
 			{
 				string genreQuery = "SELECT genreId, genre FROM Genres ORDER BY genre";
@@ -45,21 +48,21 @@ namespace Assignment2.Controllers
 					}
 				}
 			}
-			ViewBag.Genres = genreList; 
-			ViewBag.SearchGenre = searchGenre; 
-
+			ViewBag.Genres = genreList;
+			ViewBag.SearchGenre = searchGenre;
+			ViewBag.SearchKey = searchTitle;
 
 			using (SqlConnection connection = new SqlConnection(connStr))
 			{
 				string query = @"SELECT v.videoId, v.videoTitle AS title,
-                          v.releaseYear,
-                          STRING_AGG(g.genre, ', ') AS genres,
-                          STRING_AGG(d.directorName, ', ') AS directorName
-                   FROM videos v
-                   LEFT JOIN videoGenres vg ON v.videoId = vg.videoId
-                   LEFT JOIN Genres g ON vg.genreId = g.genreId
-                   LEFT JOIN VideoDirectors vd ON v.videoId = vd.videoId
-                   LEFT JOIN directors d ON vd.directorId = d.directorId";
+                                      v.releaseYear,
+                                      STRING_AGG(g.genre, ', ') AS genres,
+                                      STRING_AGG(d.directorName, ', ') AS directorName
+                               FROM videos v
+                               LEFT JOIN videoGenres vg ON v.videoId = vg.videoId
+                               LEFT JOIN Genres g ON vg.genreId = g.genreId
+                               LEFT JOIN VideoDirectors vd ON v.videoId = vd.videoId
+                               LEFT JOIN directors d ON vd.directorId = d.directorId";
 
 				List<string> whereConditions = new List<string>();
 				if (!string.IsNullOrEmpty(searchTitle))
@@ -68,7 +71,7 @@ namespace Assignment2.Controllers
 				}
 				if (!string.IsNullOrEmpty(searchGenre))
 				{
-					whereConditions.Add("vg.genreId = @GenreId"); 
+					whereConditions.Add("vg.genreId = @GenreId");
 				}
 				if (whereConditions.Count > 0)
 				{
@@ -76,7 +79,7 @@ namespace Assignment2.Controllers
 				}
 
 				query += @" GROUP BY v.videoId, v.videoTitle, v.releaseYear
-               ORDER BY v.videoTitle";
+                           ORDER BY v.videoTitle";
 
 				using (SqlCommand command = new SqlCommand(query, connection))
 				{
@@ -102,9 +105,7 @@ namespace Assignment2.Controllers
 								releaseYear = reader["releaseYear"]?.ToString() ?? "",
 								genres = reader["genres"]?.ToString() ?? "N/A",
 								directorName = reader["directorName"]?.ToString() ?? "N/A",
-								castNames = "",
-								releaseCountry = "",
-								rating = ""
+								castNames = ""
 							});
 						}
 					}
@@ -112,20 +113,11 @@ namespace Assignment2.Controllers
 			}
 
 			ViewBag.Shows = showList;
-			ViewBag.SearchKey = searchTitle;
 			return View();
 		}
 
-		public class GenreModel
-		{
-			public string genreId { get; set; }
-			public string genre { get; set; }
-		}
-
-		// Details Page: Get single show details by videoId
 		public ActionResult Details(string videoId)
 		{
-			// Validate videoId (prevent invalid access)
 			if (string.IsNullOrEmpty(videoId))
 			{
 				return HttpNotFound("Show ID does not exist");
@@ -140,11 +132,9 @@ namespace Assignment2.Controllers
                                       v.videoId,
                                       v.videoTitle AS title,
                                       v.releaseYear,
-                                      STRING_AGG(DISTINCT g.genre, ', ') AS genres,
-                                      STRING_AGG(DISTINCT d.directorName, ', ') AS directorName,
-                                      STRING_AGG(DISTINCT c.castName, ', ') AS castNames,
-                                      v.releaseCountry,
-                                      v.rating
+                                      STRING_AGG(g.genre, ', ') AS genres,
+                                      STRING_AGG(d.directorName, ', ') AS directorName,
+                                      STRING_AGG(c.castName, ', ') AS castNames
                                FROM videos v
                                LEFT JOIN videoGenres vg ON v.videoId = vg.videoId
                                LEFT JOIN Genres g ON vg.genreId = g.genreId
@@ -153,7 +143,7 @@ namespace Assignment2.Controllers
                                LEFT JOIN VideoCasts vc ON v.videoId = vc.videoId
                                LEFT JOIN Casts c ON vc.castId = c.castId
                                WHERE v.videoId = @VideoId
-                               GROUP BY v.videoId, v.videoTitle, v.releaseYear, v.releaseCountry, v.rating";
+                               GROUP BY v.videoId, v.videoTitle, v.releaseYear";
 
 				using (SqlCommand command = new SqlCommand(query, connection))
 				{
@@ -172,16 +162,13 @@ namespace Assignment2.Controllers
 								releaseYear = reader["releaseYear"]?.ToString() ?? "N/A",
 								genres = reader["genres"]?.ToString() ?? "N/A",
 								directorName = reader["directorName"]?.ToString() ?? "N/A",
-								castNames = reader["castNames"]?.ToString() ?? "N/A",
-								releaseCountry = reader["releaseCountry"]?.ToString() ?? "N/A",
-								rating = reader["rating"]?.ToString() ?? "Not Rated"
+								castNames = reader["castNames"]?.ToString() ?? "N/A"
 							};
 						}
 					}
 				}
 			}
 
-			// Validate if show exists
 			if (showDetails == null)
 			{
 				return HttpNotFound("Show details not found");

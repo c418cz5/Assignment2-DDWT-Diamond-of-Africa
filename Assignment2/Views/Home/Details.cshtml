@@ -5,13 +5,10 @@
 }
 
 <div class="container mt-5">
-	<!-- Page Heading -->
 	<h1 class="mb-4">@show.title</h1>
 
-	<!-- Show Details Card -->
 	<div class="card shadow-sm" style="max-width: 800px;">
 		<div class="card-body">
-			<!-- Basic Information -->
 			<div class="row mb-3">
 				<div class="col-md-3"><strong>Show ID</strong></div>
 				<div class="col-md-9">@show.videoId</div>
@@ -20,18 +17,6 @@
 				<div class="col-md-3"><strong>Release Year</strong></div>
 				<div class="col-md-9">@show.releaseYear</div>
 			</div>
-			<div class="row mb-3">
-				<div class="col-md-3"><strong>Release Country</strong></div>
-				<div class="col-md-9">@show.releaseCountry</div>
-			</div>
-			<div class="row mb-3">
-				<div class="col-md-3"><strong>Rating</strong></div>
-				<div class="col-md-9">
-					<span class="badge bg-primary">@show.rating</span>
-				</div>
-			</div>
-
-			<!-- Related Information -->
 			<div class="row mb-3">
 				<div class="col-md-3"><strong>Genre</strong></div>
 				<div class="col-md-9">@show.genres</div>
@@ -46,12 +31,11 @@
 			</div>
 		</div>
 
-		<!-- Action Buttons -->
 		<div class="card-footer">
 			<a href="@Url.Action("Index", "Home")" class="btn btn-secondary">
 				← Back to Show List
 			</a>
-			<a href="@Url.Action("Update", "Home", new { id = show.videoId })" class="btn btn-warning ms-2">
+			<a href="@Url.Action("Update", "Home", new { videoId = show.videoId })" class="btn btn-warning ms-2">
 				Edit Show Details
 			</a>
 		</div>
