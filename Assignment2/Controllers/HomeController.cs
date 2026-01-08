@@ -7,11 +7,20 @@ namespace Assignment2.Controllers
 {
 	public class HomeController : Controller
 	{
+		public class VideoModel
+		{
+			public string videoId { get; set; }
+			public string title { get; set; }
+			public string releaseYear { get; set; }
+			public string genres { get; set; }
+			public string directorName { get; set; }
+		}
+
 		public ActionResult Index(string searchTitle = "")
 		{
 			string connStr = System.Configuration.ConfigurationManager.ConnectionStrings["ShowDB"].ConnectionString;
 
-			List<dynamic> showList = new List<dynamic>();
+			List<VideoModel> showList = new List<VideoModel>();
 
 			using (SqlConnection connection = new SqlConnection(connStr))
 			{
@@ -46,13 +55,13 @@ namespace Assignment2.Controllers
 					{
 						while (reader.Read())
 						{
-							showList.Add(new
+							showList.Add(new VideoModel
 							{
-								videoId = reader["videoId"],
-								title = reader["title"],
-								releaseYear = reader["releaseYear"],
-								genres = reader["genres"],
-								directorName = reader["directorName"]
+								videoId = reader["videoId"].ToString(),
+								title = reader["title"].ToString(),
+								releaseYear = reader["releaseYear"]?.ToString() ?? "",
+								genres = reader["genres"]?.ToString() ?? "N/A",
+								directorName = reader["directorName"]?.ToString() ?? "N/A"
 							});
 						}
 					}
@@ -62,7 +71,7 @@ namespace Assignment2.Controllers
 			ViewBag.Shows = showList;
 			ViewBag.SearchKey = searchTitle;
 
-			wreturn View();
+			return View();
 		}
 	}
-}  
+}
