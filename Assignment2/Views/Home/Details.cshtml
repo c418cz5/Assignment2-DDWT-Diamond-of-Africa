@@ -1,1 +1,20 @@
-﻿<h2>Show Details</h2>
+﻿@{
+	Layout = "~/Views/Shared/_Layout.cshtml";
+	var show = ViewBag.Show; 
+}
+<div class="container mt-4">
+	<h1>@show.title - Details</h1>
+	<div class="card">
+		<div class="card-body">
+			<p><strong>Director:</strong> @show.directorName</p>
+			<p><strong>Genres:</strong> @show.genres</p>
+			<p><strong>Cast:</strong> @show.castNames</p> 
+			<p><strong>Release Year:</strong> @show.releaseYear</p>
+			<p><strong>Release Country:</strong> @show.releaseCountry</p> 
+			<p><strong>Rating:</strong> @show.rating</p>
+		</div>
+		<div class="card-footer">
+			<a href="@Url.Action("Index", "Home")" class="btn btn-secondary">Back to List</a>
+		</div>
+	</div>
+</div>
