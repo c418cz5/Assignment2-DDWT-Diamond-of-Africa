@@ -7,25 +7,26 @@
 }
 
 <div class="container mt-4">
-	<h1>Welcome to the Show Database</h1>
+	<h1>Show Database</h1>
 
+	<!-- Search Form (By Show Title) -->
 	<form method="get" action="@Url.Action("Index", "Home")" class="mb-4">
 		<div class="input-group">
 			<input type="text" name="searchTitle" class="form-control"
-				   placeholder="Search by title..." value="@searchKey" />
+				   placeholder="Search by show title..." value="@searchKey" />
 			<button type="submit" class="btn btn-primary">Search</button>
 		</div>
 	</form>
 
+	<!-- Show List (Card Layout) -->
 	@if (showList == null || showList.Count == 0)
 	{
 		<div class="alert alert-info">
-			No shows found. Try a different search term.
+			No shows found. Please try a different search term.
 		</div>
 	}
 	else
 	{
-
 		<div class="row">
 			@foreach (var show in showList)
 			{
@@ -34,14 +35,14 @@
 						<div class="card-body">
 							<h5 class="card-title">@show.title</h5>
 							<p class="card-text"><strong>Year:</strong> @show.releaseYear</p>
-							<p class="card-text"><strong>Genre:</strong> @(show.genres ?? "N/A")</p>
-							<p class="card-text"><strong>Director:</strong> @(show.directorName ?? "N/A")</p>
+							<p class="card-text"><strong>Genre:</strong> @show.genres</p>
+							<p class="card-text"><strong>Director:</strong> @show.directorName</p>
 						</div>
 						<div class="card-footer">
 							<a href="@Url.Action("Details", "Home", new { id = show.videoId })"
 							   class="btn btn-info btn-sm">More Details</a>
 							<a href="@Url.Action("Update", "Home", new { id = show.videoId })"
-							   class="btn btn-warning btn-sm">Update Details</a>
+							   class="btn btn-warning btn-sm ms-2">Update Details</a>
 						</div>
 					</div>
 				</div>
