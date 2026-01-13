@@ -41,7 +41,6 @@ namespace Assignment2.Controllers
 			List<VideoModel> showList = new List<VideoModel>();
 			List<GenreModel> genreList = new List<GenreModel>();
 
-			
 			using (SqlConnection connGenre = new SqlConnection(connStr))
 			{
 				string genreQuery = "SELECT genreId, genre FROM Genres ORDER BY genre";
@@ -65,18 +64,15 @@ namespace Assignment2.Controllers
 			ViewBag.SearchGenre = searchGenre;
 			ViewBag.SearchKey = searchTitle;
 
-			
 			using (SqlConnection connection = new SqlConnection(connStr))
 			{
 				string query = @"SELECT v.videoId, v.videoTitle AS title,
                                       v.releaseYear,
-                                      -- 子查询去重后拼接类型
                                       (SELECT STRING_AGG(g.genre, ', ') 
                                        FROM (SELECT DISTINCT g.genre 
                                              FROM videoGenres vg 
                                              LEFT JOIN Genres g ON vg.genreId = g.genreId 
                                              WHERE vg.videoId = v.videoId) g) AS genres,
-                                      -- 子查询去重后拼接导演
                                       (SELECT STRING_AGG(d.directorName, ', ') 
                                        FROM (SELECT DISTINCT d.directorName 
                                              FROM VideoDirectors vd 
@@ -153,19 +149,16 @@ namespace Assignment2.Controllers
                                       v.videoId,
                                       v.videoTitle AS title,
                                       v.releaseYear,
-                                      -- 子查询去重拼接类型
                                       (SELECT STRING_AGG(g.genre, ', ') 
                                        FROM (SELECT DISTINCT g.genre 
                                              FROM videoGenres vg 
                                              LEFT JOIN Genres g ON vg.genreId = g.genreId 
                                              WHERE vg.videoId = v.videoId) g) AS genres,
-                                      -- 子查询去重拼接导演
                                       (SELECT STRING_AGG(d.directorName, ', ') 
                                        FROM (SELECT DISTINCT d.directorName 
                                              FROM VideoDirectors vd 
                                              LEFT JOIN directors d ON vd.directorId = d.directorId 
                                              WHERE vd.videoId = v.videoId) d) AS directorName,
-                                      -- 子查询去重拼接演员
                                       (SELECT STRING_AGG(c.castName, ', ') 
                                        FROM (SELECT DISTINCT c.castName 
                                              FROM VideoCasts vc 
@@ -215,7 +208,6 @@ namespace Assignment2.Controllers
 			List<DirectorModel> directorList = new List<DirectorModel>();
 			List<CastModel> castList = new List<CastModel>();
 
-		
 			using (SqlConnection conn = new SqlConnection(connStr))
 			{
 				string genreQuery = "SELECT genreId, genre FROM Genres ORDER BY genre";
@@ -230,7 +222,6 @@ namespace Assignment2.Controllers
 				}
 			}
 
-		
 			using (SqlConnection conn = new SqlConnection(connStr))
 			{
 				string dirQuery = "SELECT directorId, directorName FROM Directors ORDER BY directorName";
@@ -249,7 +240,6 @@ namespace Assignment2.Controllers
 				}
 			}
 
-		
 			using (SqlConnection conn = new SqlConnection(connStr))
 			{
 				string castQuery = "SELECT castId, castName FROM Casts ORDER BY castName";
@@ -280,14 +270,12 @@ namespace Assignment2.Controllers
 			string connStr = System.Configuration.ConfigurationManager.ConnectionStrings["ShowDB"].ConnectionString;
 			string newVideoId = Guid.NewGuid().ToString().Substring(0, 8);
 
-		
 			if (string.IsNullOrEmpty(title) || genreIds == null || genreIds.Length == 0 || castIds == null || castIds.Length == 0)
 			{
 				TempData["Error"] = "Title, Genre and Cast are required!";
 				return RedirectToAction("AddShow");
 			}
 
-		
 			string directorId = existingDirectorId;
 			if (!string.IsNullOrEmpty(newDirectorName) && string.IsNullOrEmpty(existingDirectorId))
 			{
@@ -306,7 +294,6 @@ namespace Assignment2.Controllers
 				}
 			}
 
-			
 			using (SqlConnection conn = new SqlConnection(connStr))
 			{
 				string videoQuery = "INSERT INTO Videos (videoId, videoTitle, releaseYear, rating) VALUES (@vidId, @title, @year, @rating)";
@@ -319,7 +306,6 @@ namespace Assignment2.Controllers
 					conn.Open();
 					cmd.ExecuteNonQuery();
 
-					
 					foreach (var genreId in genreIds)
 					{
 						string genreQuery = "INSERT INTO VideoGenres (videoId, genreId) VALUES (@vidId, @genreId)";
@@ -331,7 +317,6 @@ namespace Assignment2.Controllers
 						}
 					}
 
-					
 					if (!string.IsNullOrEmpty(directorId))
 					{
 						string dirQuery = "INSERT INTO VideoDirectors (videoId, directorId) VALUES (@vidId, @dirId)";
@@ -343,7 +328,6 @@ namespace Assignment2.Controllers
 						}
 					}
 
-				
 					foreach (var castId in castIds)
 					{
 						string castQuery = "INSERT INTO VideoCasts (videoId, castId) VALUES (@vidId, @castId)";
@@ -360,6 +344,185 @@ namespace Assignment2.Controllers
 			TempData["Success"] = "Show added successfully!";
 			return RedirectToAction("Index");
 		}
+
+	
+		public ActionResult Update(string videoId)
+		{
+			if (string.IsNullOrEmpty(videoId))
+			{
+				return HttpNotFound("Show ID does not exist");
+			}
+
+			string connStr = System.Configuration.ConfigurationManager.ConnectionStrings["ShowDB"].ConnectionString;
+			VideoModel show = null;
+			List<GenreModel> genreList = new List<GenreModel>();
+			List<DirectorModel> directorList = new List<DirectorModel>();
+			List<CastModel> castList = new List<CastModel>();
+
+			using (SqlConnection conn = new SqlConnection(connStr))
+			{
+				string query = @"SELECT v.videoId, v.videoTitle AS title, v.releaseYear, v.rating,
+                                      (SELECT STRING_AGG(g.genreId, ',') FROM videoGenres vg WHERE vg.videoId = v.videoId) AS genreIds,
+                                      (SELECT TOP 1 vd.directorId FROM VideoDirectors vd WHERE vd.videoId = v.videoId) AS directorId,
+                                      (SELECT STRING_AGG(vc.castId, ',') FROM VideoCasts vc WHERE vc.videoId = v.videoId) AS castIds
+                               FROM videos v
+                               WHERE v.videoId = @VideoId";
+
+				using (SqlCommand cmd = new SqlCommand(query, conn))
+				{
+					cmd.Parameters.AddWithValue("@VideoId", videoId);
+					conn.Open();
+					using (SqlDataReader reader = cmd.ExecuteReader())
+					{
+						if (reader.Read())
+						{
+							show = new VideoModel
+							{
+								videoId = reader["videoId"].ToString(),
+								title = reader["title"].ToString(),
+								releaseYear = reader["releaseYear"]?.ToString() ?? "",
+								genres = reader["genreIds"]?.ToString() ?? ""
+							};
+							ViewBag.CurrentRating = reader["rating"]?.ToString() ?? "";
+							ViewBag.CurrentDirectorId = reader["directorId"]?.ToString() ?? "";
+							ViewBag.CurrentCastIds = reader["castIds"]?.ToString()?.Split(',') ?? new string[0];
+						}
+					}
+				}
+			}
+
+			if (show == null)
+			{
+				return HttpNotFound("Show details not found");
+			}
+
+			using (SqlConnection conn = new SqlConnection(connStr))
+			{
+				string genreQuery = "SELECT genreId, genre FROM Genres ORDER BY genre";
+				using (SqlCommand cmd = new SqlCommand(genreQuery, conn))
+				{
+					conn.Open();
+					SqlDataReader reader = cmd.ExecuteReader();
+					while (reader.Read())
+					{
+						genreList.Add(new GenreModel { genreId = reader["genreId"].ToString(), genre = reader["genre"].ToString() });
+					}
+				}
+			}
+
+			using (SqlConnection conn = new SqlConnection(connStr))
+			{
+				string dirQuery = "SELECT directorId, directorName FROM Directors ORDER BY directorName";
+				using (SqlCommand cmd = new SqlCommand(dirQuery, conn))
+				{
+					conn.Open();
+					SqlDataReader reader = cmd.ExecuteReader();
+					while (reader.Read())
+					{
+						directorList.Add(new DirectorModel { directorId = reader["directorId"].ToString(), directorName = reader["directorName"].ToString() });
+					}
+				}
+			}
+
+			using (SqlConnection conn = new SqlConnection(connStr))
+			{
+				string castQuery = "SELECT castId, castName FROM Casts ORDER BY castName";
+				using (SqlCommand cmd = new SqlCommand(castQuery, conn))
+				{
+					conn.Open();
+					SqlDataReader reader = cmd.ExecuteReader();
+					while (reader.Read())
+					{
+						castList.Add(new CastModel { castId = reader["castId"].ToString(), castName = reader["castName"].ToString() });
+					}
+				}
+			}
+
+			ViewBag.Show = show;
+			ViewBag.Genres = genreList;
+			ViewBag.Directors = directorList;
+			ViewBag.Casts = castList;
+			return View();
+		}
+
+		[HttpPost]
+		public ActionResult Update(string videoId, string title, string releaseYear, string rating, string[] genreIds, string existingDirectorId, string[] castIds)
+		{
+			if (string.IsNullOrEmpty(videoId) || string.IsNullOrEmpty(title) || genreIds == null || genreIds.Length == 0 || castIds == null || castIds.Length == 0)
+			{
+				TempData["Error"] = "Title, Genre and Cast are required!";
+				return RedirectToAction("Update", new { videoId = videoId });
+			}
+
+			string connStr = System.Configuration.ConfigurationManager.ConnectionStrings["ShowDB"].ConnectionString;
+
+			using (SqlConnection conn = new SqlConnection(connStr))
+			{
+				string videoQuery = "UPDATE Videos SET videoTitle = @title, releaseYear = @year, rating = @rating WHERE videoId = @videoId";
+				using (SqlCommand cmd = new SqlCommand(videoQuery, conn))
+				{
+					cmd.Parameters.AddWithValue("@videoId", videoId);
+					cmd.Parameters.AddWithValue("@title", title.Trim());
+					cmd.Parameters.AddWithValue("@year", string.IsNullOrEmpty(releaseYear) ? DBNull.Value : (object)releaseYear);
+					cmd.Parameters.AddWithValue("@rating", string.IsNullOrEmpty(rating) ? DBNull.Value : (object)rating);
+					conn.Open();
+					cmd.ExecuteNonQuery();
+
+					string delGenre = "DELETE FROM VideoGenres WHERE videoId = @videoId";
+					using (SqlCommand cmdDel = new SqlCommand(delGenre, conn))
+					{
+						cmdDel.Parameters.AddWithValue("@videoId", videoId);
+						cmdDel.ExecuteNonQuery();
+					}
+					foreach (var genreId in genreIds)
+					{
+						string addGenre = "INSERT INTO VideoGenres (videoId, genreId) VALUES (@videoId, @genreId)";
+						using (SqlCommand cmdAdd = new SqlCommand(addGenre, conn))
+						{
+							cmdAdd.Parameters.AddWithValue("@videoId", videoId);
+							cmdAdd.Parameters.AddWithValue("@genreId", genreId);
+							cmdAdd.ExecuteNonQuery();
+						}
+					}
+
+					string delDir = "DELETE FROM VideoDirectors WHERE videoId = @videoId";
+					using (SqlCommand cmdDel = new SqlCommand(delDir, conn))
+					{
+						cmdDel.Parameters.AddWithValue("@videoId", videoId);
+						cmdDel.ExecuteNonQuery();
+					}
+					if (!string.IsNullOrEmpty(existingDirectorId))
+					{
+						string addDir = "INSERT INTO VideoDirectors (videoId, directorId) VALUES (@videoId, @dirId)";
+						using (SqlCommand cmdAdd = new SqlCommand(addDir, conn))
+						{
+							cmdAdd.Parameters.AddWithValue("@videoId", videoId);
+							cmdAdd.Parameters.AddWithValue("@dirId", existingDirectorId);
+							cmdAdd.ExecuteNonQuery();
+						}
+					}
+
+					string delCast = "DELETE FROM VideoCasts WHERE videoId = @videoId";
+					using (SqlCommand cmdDel = new SqlCommand(delCast, conn))
+					{
+						cmdDel.Parameters.AddWithValue("@videoId", videoId);
+						cmdDel.ExecuteNonQuery();
+					}
+					foreach (var castId in castIds)
+					{
+						string addCast = "INSERT INTO VideoCasts (videoId, castId) VALUES (@videoId, @castId)";
+						using (SqlCommand cmdAdd = new SqlCommand(addCast, conn))
+						{
+							cmdAdd.Parameters.AddWithValue("@videoId", videoId);
+							cmdAdd.Parameters.AddWithValue("@castId", castId);
+							cmdAdd.ExecuteNonQuery();
+						}
+					}
+				}
+			}
+
+			TempData["Success"] = "Show updated successfully!";
+			return RedirectToAction("Details", new { videoId = videoId });
+		}
 	}
 }
-
