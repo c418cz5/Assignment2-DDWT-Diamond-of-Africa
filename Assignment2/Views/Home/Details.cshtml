@@ -35,8 +35,8 @@
 			<a href="@Url.Action("Index", "Home")" class="btn btn-secondary">
 				← Back to Show List
 			</a>
-			<a href="@Url.Action("Update", "Home", new { videoId = show.videoId })" class="btn btn-warning ms-2">
-				Edit Show Details
+			<a href="@Url.Action("Update", "Home", new { id = ViewBag.Show.videoId })"
+			  class="btn btn-warning">Edit Show Details
 			</a>
 		</div>
 	</div>

@@ -184,7 +184,7 @@ namespace Assignment2.Controllers
 								title = reader["title"].ToString(),
 								releaseYear = reader["releaseYear"]?.ToString() ?? "N/A",
 								genres = reader["genres"]?.ToString() ?? "N/A",
-								directorName = reader["directorName"]?.ToString() ?? "N/A",
+								directorName = reader["directorName"].ToString() ?? "N/A",
 								castNames = reader["castNames"]?.ToString() ?? "N/A"
 							};
 						}
@@ -345,10 +345,9 @@ namespace Assignment2.Controllers
 			return RedirectToAction("Index");
 		}
 
-	
-		public ActionResult Update(string videoId)
+		public ActionResult Update(string id)
 		{
-			if (string.IsNullOrEmpty(videoId))
+			if (string.IsNullOrEmpty(id))
 			{
 				return HttpNotFound("Show ID does not exist");
 			}
@@ -362,7 +361,7 @@ namespace Assignment2.Controllers
 			using (SqlConnection conn = new SqlConnection(connStr))
 			{
 				string query = @"SELECT v.videoId, v.videoTitle AS title, v.releaseYear, v.rating,
-                                      (SELECT STRING_AGG(g.genreId, ',') FROM videoGenres vg WHERE vg.videoId = v.videoId) AS genreIds,
+                                      (SELECT STRING_AGG(vg.genreId, ',') FROM videoGenres vg WHERE vg.videoId = v.videoId) AS genreIds,
                                       (SELECT TOP 1 vd.directorId FROM VideoDirectors vd WHERE vd.videoId = v.videoId) AS directorId,
                                       (SELECT STRING_AGG(vc.castId, ',') FROM VideoCasts vc WHERE vc.videoId = v.videoId) AS castIds
                                FROM videos v
@@ -370,7 +369,7 @@ namespace Assignment2.Controllers
 
 				using (SqlCommand cmd = new SqlCommand(query, conn))
 				{
-					cmd.Parameters.AddWithValue("@VideoId", videoId);
+					cmd.Parameters.AddWithValue("@VideoId", id);
 					conn.Open();
 					using (SqlDataReader reader = cmd.ExecuteReader())
 					{
@@ -446,12 +445,12 @@ namespace Assignment2.Controllers
 		}
 
 		[HttpPost]
-		public ActionResult Update(string videoId, string title, string releaseYear, string rating, string[] genreIds, string existingDirectorId, string[] castIds)
+		public ActionResult Update(string id, string title, string releaseYear, string rating, string[] genreIds, string existingDirectorId, string[] castIds)
 		{
-			if (string.IsNullOrEmpty(videoId) || string.IsNullOrEmpty(title) || genreIds == null || genreIds.Length == 0 || castIds == null || castIds.Length == 0)
+			if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(title) || genreIds == null || genreIds.Length == 0 || castIds == null || castIds.Length == 0)
 			{
 				TempData["Error"] = "Title, Genre and Cast are required!";
-				return RedirectToAction("Update", new { videoId = videoId });
+				return RedirectToAction("Update", new { id = id });
 			}
 
 			string connStr = System.Configuration.ConfigurationManager.ConnectionStrings["ShowDB"].ConnectionString;
@@ -461,7 +460,7 @@ namespace Assignment2.Controllers
 				string videoQuery = "UPDATE Videos SET videoTitle = @title, releaseYear = @year, rating = @rating WHERE videoId = @videoId";
 				using (SqlCommand cmd = new SqlCommand(videoQuery, conn))
 				{
-					cmd.Parameters.AddWithValue("@videoId", videoId);
+					cmd.Parameters.AddWithValue("@videoId", id);
 					cmd.Parameters.AddWithValue("@title", title.Trim());
 					cmd.Parameters.AddWithValue("@year", string.IsNullOrEmpty(releaseYear) ? DBNull.Value : (object)releaseYear);
 					cmd.Parameters.AddWithValue("@rating", string.IsNullOrEmpty(rating) ? DBNull.Value : (object)rating);
@@ -471,7 +470,7 @@ namespace Assignment2.Controllers
 					string delGenre = "DELETE FROM VideoGenres WHERE videoId = @videoId";
 					using (SqlCommand cmdDel = new SqlCommand(delGenre, conn))
 					{
-						cmdDel.Parameters.AddWithValue("@videoId", videoId);
+						cmdDel.Parameters.AddWithValue("@videoId", id);
 						cmdDel.ExecuteNonQuery();
 					}
 					foreach (var genreId in genreIds)
@@ -479,7 +478,7 @@ namespace Assignment2.Controllers
 						string addGenre = "INSERT INTO VideoGenres (videoId, genreId) VALUES (@videoId, @genreId)";
 						using (SqlCommand cmdAdd = new SqlCommand(addGenre, conn))
 						{
-							cmdAdd.Parameters.AddWithValue("@videoId", videoId);
+							cmdAdd.Parameters.AddWithValue("@videoId", id);
 							cmdAdd.Parameters.AddWithValue("@genreId", genreId);
 							cmdAdd.ExecuteNonQuery();
 						}
@@ -488,7 +487,7 @@ namespace Assignment2.Controllers
 					string delDir = "DELETE FROM VideoDirectors WHERE videoId = @videoId";
 					using (SqlCommand cmdDel = new SqlCommand(delDir, conn))
 					{
-						cmdDel.Parameters.AddWithValue("@videoId", videoId);
+						cmdDel.Parameters.AddWithValue("@videoId", id);
 						cmdDel.ExecuteNonQuery();
 					}
 					if (!string.IsNullOrEmpty(existingDirectorId))
@@ -496,7 +495,7 @@ namespace Assignment2.Controllers
 						string addDir = "INSERT INTO VideoDirectors (videoId, directorId) VALUES (@videoId, @dirId)";
 						using (SqlCommand cmdAdd = new SqlCommand(addDir, conn))
 						{
-							cmdAdd.Parameters.AddWithValue("@videoId", videoId);
+							cmdAdd.Parameters.AddWithValue("@videoId", id);
 							cmdAdd.Parameters.AddWithValue("@dirId", existingDirectorId);
 							cmdAdd.ExecuteNonQuery();
 						}
@@ -505,7 +504,7 @@ namespace Assignment2.Controllers
 					string delCast = "DELETE FROM VideoCasts WHERE videoId = @videoId";
 					using (SqlCommand cmdDel = new SqlCommand(delCast, conn))
 					{
-						cmdDel.Parameters.AddWithValue("@videoId", videoId);
+						cmdDel.Parameters.AddWithValue("@videoId", id);
 						cmdDel.ExecuteNonQuery();
 					}
 					foreach (var castId in castIds)
@@ -513,7 +512,7 @@ namespace Assignment2.Controllers
 						string addCast = "INSERT INTO VideoCasts (videoId, castId) VALUES (@videoId, @castId)";
 						using (SqlCommand cmdAdd = new SqlCommand(addCast, conn))
 						{
-							cmdAdd.Parameters.AddWithValue("@videoId", videoId);
+							cmdAdd.Parameters.AddWithValue("@videoId", id);
 							cmdAdd.Parameters.AddWithValue("@castId", castId);
 							cmdAdd.ExecuteNonQuery();
 						}
@@ -522,7 +521,7 @@ namespace Assignment2.Controllers
 			}
 
 			TempData["Success"] = "Show updated successfully!";
-			return RedirectToAction("Details", new { videoId = videoId });
+			return RedirectToAction("Details", new { videoId = id });
 		}
 	}
 }

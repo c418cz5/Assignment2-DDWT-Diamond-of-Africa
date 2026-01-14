@@ -2,7 +2,9 @@
 	Layout = "~/Views/Shared/_Layout.cshtml";
 	var show = ViewBag.Show;
 	Page.Title = $"Edit {show?.title}";
-	var currentCastIds = ViewBag.CurrentCastIds as string[];
+	string[] currentCastIds = (ViewBag.CurrentCastIds as string[]) ?? new string[0];
+	string genreIds = show.genres ?? string.Empty;
+	string genreIdsWrap = "," + genreIds + ",";
 }
 
 <div class="container mt-4">
@@ -18,27 +20,23 @@
 	}
 
 	<form method="post" action="@Url.Action("Update", "Home")" class="row g-3 mt-3">
-		<input type="hidden" name="videoId" value="@show.videoId" />
+		<input type="hidden" name="id" value="@show.videoId" />
 
-	
 		<div class="col-md-6">
 			<label class="form-label">Show Title *</label>
 			<input type="text" name="title" class="form-control" value="@show.title" required>
 		</div>
-
 
 		<div class="col-md-3">
 			<label class="form-label">Release Year</label>
 			<input type="number" name="releaseYear" class="form-control" min="1900" max="@DateTime.Now.Year" value="@show.releaseYear">
 		</div>
 
-		
 		<div class="col-md-3">
 			<label class="form-label">Rating (0-10)</label>
 			<input type="number" name="rating" class="form-control" min="0" max="10" step="0.5" value="@ViewBag.CurrentRating">
 		</div>
 
-	
 		<div class="col-md-12">
 			<label class="form-label">Genre *</label>
 			<div class="row">
@@ -47,14 +45,13 @@
 					<div class="col-md-3">
 						<div class="form-check">
 							<input class="form-check-input" type="checkbox" name="genreIds" value="@genre.genreId" id="genre_@genre.genreId"
-								   @(show.genres.Contains(genre.genreId) ? "checked" : "")>
+								   @(genreIdsWrap.Contains("," + genre.genreId + ",") ? "checked" : "")>
 							<label class="form-check-label" for="genre_@genre.genreId">@genre.genre</label>
 						</div>
 					</div>
 				}
 			</div>
 		</div>
-
 
 		<div class="col-md-12">
 			<label class="form-label">Director</label>
@@ -71,7 +68,6 @@
 			</div>
 		</div>
 
-
 		<div class="col-md-12">
 			<label class="form-label">Cast *</label>
 			<div class="row">
@@ -80,14 +76,13 @@
 					<div class="col-md-3">
 						<div class="form-check">
 							<input class="form-check-input" type="checkbox" name="castIds" value="@cast.castId" id="cast_@cast.castId"
-								   @(currentCastIds.Contains(cast.castId) ? "checked" : "") required>
+								   @(Array.Exists(currentCastIds, x => x == cast.castId) ? "checked" : "") required>
 							<label class="form-check-label" for="cast_@cast.castId">@cast.castName</label>
 						</div>
 					</div>
 				}
 			</div>
 		</div>
-
 
 		<div class="col-md-12">
 			<button type="submit" class="btn btn-primary">Save Changes</button>
