@@ -133,9 +133,10 @@ namespace Assignment2.Controllers
 			return View();
 		}
 
-		public ActionResult Details(string videoId)
+
+		public ActionResult Details(string id)
 		{
-			if (string.IsNullOrEmpty(videoId))
+			if (string.IsNullOrEmpty(id))
 			{
 				return HttpNotFound("Show ID does not exist");
 			}
@@ -171,7 +172,7 @@ namespace Assignment2.Controllers
 				using (SqlCommand command = new SqlCommand(query, connection))
 				{
 					command.CommandTimeout = 60;
-					command.Parameters.AddWithValue("@VideoId", videoId);
+					command.Parameters.AddWithValue("@VideoId", id); 
 
 					connection.Open();
 					using (SqlDataReader reader = command.ExecuteReader())
@@ -249,11 +250,7 @@ namespace Assignment2.Controllers
 					SqlDataReader reader = cmd.ExecuteReader();
 					while (reader.Read())
 					{
-						castList.Add(new CastModel
-						{
-							castId = reader["castId"].ToString(),
-							castName = reader["castName"].ToString()
-						});
+						castList.Add(new CastModel { castId = reader["castId"].ToString(), castName = reader["castName"].ToString() });
 					}
 				}
 			}
@@ -521,7 +518,7 @@ namespace Assignment2.Controllers
 			}
 
 			TempData["Success"] = "Show updated successfully!";
-			return RedirectToAction("Details", new { videoId = id });
+			return RedirectToAction("Details", new { id = id });
 		}
 	}
 }

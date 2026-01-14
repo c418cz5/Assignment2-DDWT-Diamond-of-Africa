@@ -5,39 +5,47 @@
 }
 
 <div class="container mt-5">
-	<h1 class="mb-4">@show.title</h1>
+	@if (show == null)
+	{
+		<div class="alert alert-danger">Show details not found.</div>
+	}
+	else
+	{
+		<h1 class="mb-4">@show.title</h1>
 
-	<div class="card shadow-sm" style="max-width: 800px;">
-		<div class="card-body">
-			<div class="row mb-3">
-				<div class="col-md-3"><strong>Show ID</strong></div>
-				<div class="col-md-9">@show.videoId</div>
+		<div class="card shadow-sm" style="max-width: 800px;">
+			<div class="card-body">
+				<div class="row mb-3">
+					<div class="col-md-3"><strong>Show ID</strong></div>
+					<div class="col-md-9">@show.videoId</div>
+				</div>
+				<div class="row mb-3">
+					<div class="col-md-3"><strong>Release Year</strong></div>
+					<div class="col-md-9">@(string.IsNullOrEmpty(show.releaseYear) ? "N/A" : show.releaseYear)</div>
+				</div>
+				<div class="row mb-3">
+					<div class="col-md-3"><strong>Genre</strong></div>
+					<div class="col-md-9">@show.genres</div>
+				</div>
+				<div class="row mb-3">
+					<div class="col-md-3"><strong>Director</strong></div>
+					<div class="col-md-9">@show.directorName</div>
+				</div>
+				<div class="row mb-3">
+					<div class="col-md-3"><strong>Cast</strong></div>
+					<div class="col-md-9">@show.castNames</div>
+				</div>
 			</div>
-			<div class="row mb-3">
-				<div class="col-md-3"><strong>Release Year</strong></div>
-				<div class="col-md-9">@show.releaseYear</div>
-			</div>
-			<div class="row mb-3">
-				<div class="col-md-3"><strong>Genre</strong></div>
-				<div class="col-md-9">@show.genres</div>
-			</div>
-			<div class="row mb-3">
-				<div class="col-md-3"><strong>Director</strong></div>
-				<div class="col-md-9">@show.directorName</div>
-			</div>
-			<div class="row mb-3">
-				<div class="col-md-3"><strong>Cast</strong></div>
-				<div class="col-md-9">@show.castNames</div>
+
+			<div class="card-footer">
+				<a href="@Url.Action("Index", "Home")" class="btn btn-secondary">
+					← Back to Show List
+				</a>
+				<a href="@Url.Action("Update", "Home", new { id = show.videoId })"
+				   class="btn btn-warning ms-2">
+					Edit Show Details
+				</a>
 			</div>
 		</div>
-
-		<div class="card-footer">
-			<a href="@Url.Action("Index", "Home")" class="btn btn-secondary">
-				← Back to Show List
-			</a>
-			<a href="@Url.Action("Update", "Home", new { id = ViewBag.Show.videoId })"
-			  class="btn btn-warning">Edit Show Details
-			</a>
-		</div>
-	</div>
+	}
 </div>
